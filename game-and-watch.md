@@ -1,11 +1,11 @@
-# Game & Watch on both panels (Yokoi): plan
+# Game & Watch on both panels: plan
 
-Status: idea, not started. Written 2026-10-31.
+Status: idea, not started. Written 2026-10-31. Three routes; the first experiment decides between them.
 
 ## Why
 
-To play **Donkey Kong II** (a two-screen "Multi Screen" Game & Watch, JR-55) on the RG DS Plus, one LCD screen per
-panel, as the original.
+To play **Donkey Kong II** (a two-screen "Multi Screen" Game & Watch, JR-55; MAME name `gnw_dkong2`) on the RG DS
+Plus, one LCD screen per panel, as the original.
 
 - No official re-release keeps the two screens. Game & Watch Gallery 3 (GBC) has it as an unlockable but on one
   screen; the DS "Game & Watch Collection" releases are two-screen but have other games (Donkey Kong, Oil Panic,
@@ -13,7 +13,35 @@ panel, as the original.
 - BananaOS ships no Game & Watch emulator: no MAME, no libretro `gw` core. Its RetroArch cores are NES, SNES,
   GB/GBC, GBA, Mega Drive, N64, PS1 and PICO-8, and RetroArch games use one panel.
 
-## The emulator: Yokoi
+## Routes at a glance
+
+| Route | What | Both panels? | Games | Size |
+|---|---|---|---|---|
+| **A. `gw` core** | The libretro "Handheld Electronic (GW)" core in BananaOS's RetroArch: a `libretro-gw` Buildroot package plus a Game & Watch system (`roms/gw`) | **No**, both screens on one panel | `.mgw` files (the user has these) | small |
+| **B. Span mode** | RetroArch sees one 1024×1536 display; BananaOS shows its top half on the top panel and its bottom half on the bottom (GammaOS's approach) | Yes, if the core's frame divides cleanly | `.mgw` with route A; also helps vertical (TATE) arcade and Vectrex | large |
+| **C. Yokoi** | A native Game & Watch emulator with a two-screen SDL2 frontend (below) | Yes, by design | MAME ROM, artwork and screenshot, converted to a `.ykp` | medium |
+
+**First step, whatever the route:** run the `gw` core with the Donkey Kong II `.mgw` (RetroArch on a PC is fine)
+and take a screenshot of one frame. If it's just the two LCD screens stacked, B splits it trivially. If it draws the
+whole console with artwork between the screens, B needs per-game crop areas, and C becomes more attractive.
+
+## What GammaOS does (checked 2026-10-31)
+
+There's no Game & Watch-specific feature. GammaOS (Android) has an OS-level "span"/"dual stack" mode: an app sees
+both screens as one tall screen, so RetroArch draws one tall picture over both panels. An r/ANBERNIC thread ("RG DS
+Retroarch with Dual Screens") suggests it for `gw`, with "adjust the layout to see if it'll work"; it never confirms
+it worked. The same thread says Vectrex and CPS1 TATE modes span both screens that way. GammaOS's image ships
+RetroArch's standard `gw_libretro.info`, but nothing found shows `gw`-specific two-screen handling.
+
+## How BananaOS shows things today (why B is work)
+
+- RetroArch: `video_driver = "gl"` on **one** connector (`video_monitor_index`: 2 the top, 1 the bottom;
+  `run-retroarch:312`, `/etc/banana/retroarch.cfg`). `banana-leaseshim` (`ui/src/leaseshim.c`) hands a game exactly
+  one panel through a DRM lease, so the menu keeps the other: the opposite of spanning.
+- The DS emulators drive both panels themselves: KMS, both panels in one atomic commit (`docs/EMULATORS.md:109`).
+  That's the model for B's presenter, or for a minimal libretro frontend just for `gw`.
+
+## Route C details: Yokoi
 
 - Source: https://github.com/RetroValou/Yokoi_Game_-_Watch_emulator_3ds. An emulator of the Sharp SM5A / SM510 /
   SM511 / SM512 CPUs in the Game & Watch units. **Public domain** ("Free to use, No attribution required"), so
@@ -33,8 +61,9 @@ panel, as the original.
 ## What BananaOS has for it
 
 - SDL2 2.32 and glibc 2.41, newer than the stock-OS port needs (2.38).
-- SDL apps across both panels already work: the shelf apps (eReaderDS etc.), through `banana-leaseshim`
-  (`ui/src/leaseshim.c`). Check how those apps are launched and given both panels.
+- Some apps already draw on both panels: LÖVE apps such as eReaderDS, through a "zero-copy panel patch for LÖVE
+  apps on both panels" (README credits). Find that patch and how those apps are launched; it's the closest model
+  for C, and maybe for B. (Not `banana-leaseshim`: that gives a program **one** panel through a DRM lease.)
 - A Buildroot sysroot with SDL2 in `output/rgds-plus/` to build against.
 
 ## Games
@@ -79,8 +108,8 @@ changed too.
    - touch
    - sound and the volume keys
    - leaving it cleanly back to the menu
-4. **Adapt what doesn't work.** Likely the controller mapping, and the two panels through `banana-leaseshim` as the
-   shelf apps do. Keep the changes small, and offer useful ones back to Yokoi upstream.
+4. **Adapt what doesn't work.** Likely the controller mapping, and the two panels the way the LÖVE apps get them
+   (see "What BananaOS has for it"). Keep the changes small, and offer useful ones back to Yokoi upstream.
 5. **If it all works, decide how BananaOS gets it.** Open an issue on JorreFog/BananaLinux first; it's the
    maintainer's call:
    - a shelf/Store **app**, like eReaderDS; or
