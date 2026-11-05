@@ -136,8 +136,16 @@ Done 2026-11-01, not yet built as an image:
   after each game, in the background, waiting while a game plays; ~7 s a cover. Checked on the device: four games.
 - Both cards: the artwork folder is the one beside the ROM (`<roms>/gameandwatch/artwork`, main or second card).
 
+- MAME's menu, made for the device (patches 0005–0008, 2026-11-02): no warning screens; a short menu (Video Options,
+  Machine Configuration, DIP Switches, Input Settings, Audio Mixer, Close Menu, Quit); on the top panel in
+  two-screen games too; 16 lines a panel in the Pixel theme's Pixelify Sans (SDL_ttf kept without fontconfig: the
+  built-in bitmap font scaled up was soft, and MAME's whole-step scaling sized it differently per game type).
+- RomM: g-and-w → gameandwatch, each artwork zip with its game, checked by size (RomM's hashes of the files in a
+  folder entry aren't the files'); test packages built from `tmp/all-prs-gw` (tmp/all-prs + this branch).
+
 To do:
-- The image build and a test update package.
+- The `-3` test package (MAME rebuilt with 0005–0008), then remove the card's temporary test override
+  (`banana/systems.conf`, `/data/gwtest`).
 - Hide MAME's "requires external artwork" warning when there's no artwork zip.
 - Maybe: remember the view picked in the menu, and the panel swap, per game.
 - Menu names and art (decided 2026-11-01): names, year and maker from MAME's own `-listxml` ("Game & Watch: Donkey
