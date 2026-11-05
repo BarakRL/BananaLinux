@@ -22,7 +22,7 @@ folder, pick the game in the library.
 
 | Route | Files the user brings | Picture on a 1024×768 panel | Verdict |
 |---|---|---|---|
-| libretro `gw` core | `.mgw` (one file a game) | **blocky**: DK II's LCD is 276×186 in the `.mgw`, ~3.7× upscale | fallback only |
+| libretro `gw` core | `.mgw` (one file a game) | **blocky**: DK II's LCD is 276×186 in the `.mgw`, ~3.7× upscale | **tried and rejected** (below) |
 | Yokoi | `.ykp`, built on a PC from MAME files (Python, Inkscape, Windows paths) | sharp (`--hires`: 1280×960 a screen) | too hard for most users |
 | **MAME** | the MAME ROM zip and artwork zip, as they are | sharp: SVG LCDs drawn at panel size, 2463 px-wide scenery | **chosen** |
 
@@ -31,6 +31,14 @@ folder, pick the game in the library.
 - **Degrades gracefully:** without the artwork zip, MAME's built-in layout shows the bare LCDs.
 - MAME already handles multi-screen machines (one view with both screens, or a window a screen). Nothing found shows
   it on both panels of an RG DS, so that part is new.
+
+**The `gw` core, tried on the device (2026-11-02): rejected.** Built as a side-by-side comparison against MAME
+(branch `feature/gw-core` off 0.5.2.2, never committed: a `libretro-gw` package at gw-libretro `91d599b`, Zlib; a
+`[gameandwatch]` system with `ext = mgw` and `run-retroarch gw`; RomM's `g-and-w` slug mapped in the sync). Played with
+the user's `.mgw` set from RomM: "buggy and horrible". One panel, blocky, no covers from the device's scrapers
+(libretro's "Handheld Electronic Game" has ~16 Game & Watch boxes; TwilightBoxart has no such system). MAME stays the
+only route; the `gw` core is no longer a fallback. The work is kept in a stash, "gw-core experiment (rejected)"
+(`3e3ea0d`), should it ever be wanted for the non-Nintendo LCD games it also plays.
 
 What the files are (checked 2026-11-01, DK II):
 - ROM zip `gnw_dkong2.zip`: `jr-55_560` (4 KB, the Sharp CPU's program) plus `gnw_dkong2_top.svg` and

@@ -24,8 +24,8 @@ Plus, one LCD screen per panel, as the original.
 
 **Decision (user, 2026-10-31): route C, the standalone Yokoi app.** It's two-screen by design (no frame to split,
 no per-game crops), public domain, and leaves RetroArch alone, so nothing else on the handheld can break. B is the
-riskiest, since it changes how RetroArch reaches the panels for everything. **A stays the fallback** (one panel,
-`.mgw` files, small) if C stalls. The cost of C: MAME files converted on a PC instead of the `.mgw` files the user
+riskiest, since it changes how RetroArch reaches the panels for everything. **A stayed the fallback** (one panel,
+`.mgw` files, small) if C stalls; tried on the device 2026-11-02 and rejected (`game-and-watch-mame.md`). The cost of C: MAME files converted on a PC instead of the `.mgw` files the user
 has, and Yokoi has to handle input, sound, volume keys and the return to the menu itself.
 
 (Only for B: run the `gw` core with the DK II `.mgw` and screenshot a frame. Stacked screens alone would split
