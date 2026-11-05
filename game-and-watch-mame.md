@@ -132,8 +132,12 @@ Done 2026-11-01, not yet built as an image:
 - The menu's views: "Unit Only" fits the two panels well; "Unit and Backdrop" is a 4:3 frame (small in the tall
   window, by design of the packs). Default stays "Background".
 
+- Names and covers (`gw-meta`, 2026-11-01): see "Menu names and art" below; at menu start (banana-ui-session) and
+  after each game, in the background, waiting while a game plays; ~7 s a cover. Checked on the device: four games.
+- Both cards: the artwork folder is the one beside the ROM (`<roms>/gameandwatch/artwork`, main or second card).
+
 To do:
-- Names and covers (below), the image build and a test update package.
+- The image build and a test update package.
 - Hide MAME's "requires external artwork" warning when there's no artwork zip.
 - Maybe: remember the view picked in the menu, and the panel swap, per game.
 - Menu names and art (decided 2026-11-01): names, year and maker from MAME's own `-listxml` ("Game & Watch: Donkey
