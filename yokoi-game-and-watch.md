@@ -42,6 +42,23 @@ panel, as the original.
 The user supplies them. MAME's Game & Watch ROMs and artwork are converted with Yokoi's `CONVERT_ROM` scripts
 (Android/RGDS target) into `yokoi_pack_rgds.ykp`. Nothing of the games goes into BananaOS or a PR.
 
+## Getting started (facts checked 2026-10-31)
+
+- **Toolchain and SDL2 to build against**, all from the `rgds-plus` image build (present while `output/` is):
+  - compiler: `output/rgds-plus/host/bin/aarch64-linux-g++` (Bootlin glibc, C++20 capable)
+  - sysroot: `output/rgds-plus/host/aarch64-buildroot-linux-gnu/sysroot`
+  - SDL2 headers: `output/rgds-plus/staging/usr/include/SDL2/`
+  - `pkg-config`: `output/rgds-plus/host/bin/pkg-config`, which reports the sysroot's SDL2
+- **Getting it onto the handheld:** copy the binary and the ROM pack to the main card's exFAT partition (`/data`), or
+  use SSH: the user's public key goes in `banana/ssh/authorized_keys` on the main card, then Settings › Network ›
+  SSH on, then `ssh root@<address>` (the address is in Settings › Wi-Fi's description; `docs/FIRST-BOOT.md:76`).
+  The menu holds the panels (DRM master) while it runs, so a test from SSH has to get them first. See how
+  `run-retroarch` and the shelf apps hand the panels over, in `docs/EMULATORS.md` ("closed its display").
+- **Git:** start from an up-to-date `main` (`git checkout main && git pull --ff-only`) on a feature branch. Yokoi's
+  own clone goes in `tmp/`, which is gitignored. This plan lives on the `plans` branch, checked out at `plans/`;
+  update it there and push with `git push` from `plans/`.
+- **Only the RG DS Plus matters.** Build `rgds-plus` only.
+
 ## Steps
 
 1. **Build it for BananaOS.** Clone Yokoi into `tmp/` (gitignored, outside BananaLinux's tree) and build `linux/`
