@@ -39,8 +39,17 @@ panel, as the original.
 
 ## Games
 
-The user supplies them. MAME's Game & Watch ROMs and artwork are converted with Yokoi's `CONVERT_ROM` scripts
-(Android/RGDS target) into `yokoi_pack_rgds.ykp`. Nothing of the games goes into BananaOS or a PR.
+The user supplies them. Nothing of the games goes into BananaOS or a PR. Yokoi's `CONVERT_ROM` scripts (target
+`rgds`: `convert_original.py --target rgds`, `convert_3ds.py --target rgds`) turn **MAME** data, tested with MAME
+0.282, into `yokoi_pack_rgds.ykp`. The inputs:
+- the game's MAME ROM zip;
+- its MAME artwork zip, in `rom/artwork/`;
+- a screenshot of the console artwork, taken in MAME itself (F12 while the game shows its artwork; MAME doesn't
+  ship these).
+
+**`.mgw` files don't work with Yokoi.** They're the libretro `gw` core's format (MADrigal's simulators). That core
+would be the other route: a RetroArch core added to BananaOS, with both screens stacked on one panel unless that's
+changed too.
 
 ## Getting started (facts checked 2026-10-31)
 
