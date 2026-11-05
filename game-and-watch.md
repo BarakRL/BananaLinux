@@ -21,9 +21,14 @@ Plus, one LCD screen per panel, as the original.
 | **B. Span mode** | RetroArch sees one 1024×1536 display; BananaOS shows its top half on the top panel and its bottom half on the bottom (GammaOS's approach) | Yes, if the core's frame divides cleanly | `.mgw` with route A; also helps vertical (TATE) arcade and Vectrex | large |
 | **C. Yokoi** | A native Game & Watch emulator with a two-screen SDL2 frontend (below) | Yes, by design | MAME ROM, artwork and screenshot, converted to a `.ykp` | medium |
 
-**First step, whatever the route:** run the `gw` core with the Donkey Kong II `.mgw` (RetroArch on a PC is fine)
-and take a screenshot of one frame. If it's just the two LCD screens stacked, B splits it trivially. If it draws the
-whole console with artwork between the screens, B needs per-game crop areas, and C becomes more attractive.
+**Decision (user, 2026-10-31): route C, the standalone Yokoi app.** It's two-screen by design (no frame to split,
+no per-game crops), public domain, and leaves RetroArch alone, so nothing else on the handheld can break. B is the
+riskiest, since it changes how RetroArch reaches the panels for everything. **A stays the fallback** (one panel,
+`.mgw` files, small) if C stalls. The cost of C: MAME files converted on a PC instead of the `.mgw` files the user
+has, and Yokoi has to handle input, sound, volume keys and the return to the menu itself.
+
+(Only for B: run the `gw` core with the DK II `.mgw` and screenshot a frame. Stacked screens alone would split
+trivially; console artwork between them would need per-game crops.)
 
 ## What GammaOS does (checked 2026-10-31)
 
