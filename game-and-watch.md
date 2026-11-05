@@ -1,7 +1,6 @@
 # Game & Watch on both panels: plan
 
-Status: route C, step 1 done (2026-11-01): Yokoi's Linux frontend builds for the Plus; next, a ROM pack and the
-first test on the handheld. Written 2026-10-31.
+Status: idea, not started. Written 2026-10-31. Three routes; the first experiment decides between them.
 
 ## Why
 
@@ -110,7 +109,7 @@ changed too.
 
 ## Steps
 
-1. **Build it for BananaOS.** *Done 2026-11-01, see "Step 1 results".* Clone Yokoi into `tmp/` (gitignored, outside BananaLinux's tree) and build `linux/`
+1. **Build it for BananaOS.** Clone Yokoi into `tmp/` (gitignored, outside BananaLinux's tree) and build `linux/`
    against the `rgds-plus` toolchain and sysroot. Nothing in BananaOS changes.
 2. **Make a ROM pack** with Donkey Kong II (the user's own MAME files, via `CONVERT_ROM`).
 3. **Test over SSH** on the Plus. Check:
@@ -126,76 +125,9 @@ changed too.
    - a shelf/Store **app**, like eReaderDS; or
    - a Buildroot package plus a Game & Watch system in the library (`systems.conf`, a `roms/gw` folder).
 
-## Step 1 results (2026-11-01, Yokoi at `acb72c1`, Linux frontend 2.5)
-
-**Build.** Clone in `tmp/Yokoi`. Yokoi's own cross script takes the Buildroot toolchain as is (an explicit `CXX`
-skips its Ubuntu toolchain download):
-
-```sh
-O=$PWD/output/rgds-plus/host
-cd tmp/Yokoi
-CXX=$O/bin/aarch64-linux-g++ PKG_CONFIG=$O/bin/pkg-config READELF=$O/bin/aarch64-linux-readelf YOKOI_BUILD_JOBS=8 \
-  ./linux/cross-build-aarch64.sh --sysroot $O/aarch64-buildroot-linux-gnu/sysroot
-```
-
-It gives `linux/build/yokoi.aarch64`: 2.2 MB, libstdc++ static, needs only `libSDL2-2.0.so.0`, libm and libc
-(GLIBC_2.38; BananaOS has 2.41). Warnings only (unused parameters in the cores). BananaOS's SDL2 has KMSDRM (GBM,
-GLES2), offscreen, dummy and ALSA, all Yokoi needs.
-
-**One window per display or one over both? Either, by itself.** At startup it counts SDL's displays. With two or
-more it opens a fullscreen window and renderer on displays 0 and 1, each with a 640x480 logical size: display 0 the
-top (the menu's details, or the game's LCD, or a clamshell game's LCD 0), display 1 the bottom (console artwork, or a
-clamshell game's LCD 1). Donkey Kong II is a clamshell game, so one LCD a panel. If the second window, its renderer
-or its logical size fails, it logs why and draws both panels on display 0, **each in half the output's height**.
-A "Swap screens" setting exchanges them. So BananaOS has two ways to give it both panels, and neither needs a change
-to Yokoi:
-
-1. **KMSDRM, two displays:** `SDL_VIDEODRIVER=kmsdrm SDL_KMSDRM_FIRST=DSI-2` (Banana's SDL patch makes the top panel
-   display 0, as `run-port` and `run-store-app` already do). Unknown: whether SDL2's KMSDRM drives two GLES windows
-   on two CRTCs well (no BananaOS app does yet; LÖVE has one window). The test decides.
-2. **One display over both:** `SDL_VIDEODRIVER=offscreen SDL_BANANA_PANELS=stack SDL_BANANA_TOP=DSI-2`, the LÖVE
-   apps' path (casualducko's zero-copy patch, `buildroot/patches/sdl2/0002-*`; `run-bank` uses the dummy driver's
-   `side` variant). Yokoi sees one 1024x1536 display and its one-display layout puts each LCD in its own half,
-   which is its own panel. Touch on the bottom panel is mapped onto the lower half (`BP_MapTouch`), and Yokoi's
-   one-display touch code takes the lower half as the bottom screen. This is the fallback if 1 misbehaves.
-
-**ROM pack and saves.** `yokoi <pack.ykp> <storage dir>` (defaults `./yokoi_pack_rgds.ykp` and `.`); content
-version 3 or later; 3DS packs are refused. Under the storage directory: `yokoi_gw_settings.dat`,
-`yokoi_gw_last_game_by_mfr.dat`, `yokoi_linux_preferences.dat` (swap, controller layout) and `yokoi_gw_saves/`
-(save states, written on quitting with Select+Start or L+B). Both are arguments, so any `/data` path fits. On a
-1024x768 panel the hi-res pack is worth it: `convert_original.py --target rgds` then `convert_3ds.py --target rgds
---hires`, which writes `yokoi_pack_rgds3x.ykp`, renamed to `yokoi_pack_rgds.ykp`.
-
-**Audio.** SDL audio, asks 48 kHz stereo with frequency and channel changes allowed (mono is converted; some ALSA
-devices refuse mono), queued, logged as `Audio opened: …` or `Audio disabled: …`. A failure doesn't stop play.
-With `SDL_AUDIODRIVER=alsa` it should reach BananaOS's default device; whether the volume keys work while it runs
-is for the test (bananad handles them system-wide?).
-
-**Input.** SDL GameController, so it needs the pad's mapping: `retrogame_joypad` is in PortMaster's
-`gamecontrollerdb.txt` (GUID `190000004b4800000111000000010000`, see `mod_BananaOS.txt`). Settings has a
-"Controller layout: RGDS" for the stock OS's swapped Select/Guide; under BananaOS's mapping Default is probably
-right. R1 opens settings; Select+Start saves and quits; L+B back to the game list.
-
-**How it's started for the test: from the Ports shelf**, since a launcher there is how the menu hands the panels
-over. `run-port` darkens the bottom panel's backlight (`one-panel`), so the test script turns it on again. Staged
-in `tmp/yokoi-port/` (gitignored): `yokoi/yokoi.aarch64`, `yokoi/test.sh` (common part: backlight, pad mapping,
-ALSA, `log.txt`), and two launchers, `Yokoi (two windows).sh` (way 1) and `Yokoi (stacked).sh` (way 2).
-
-### `rk3326er/yokoi4rk` (looked at 2026-11-01, user's question)
-
-Not usable as is, and not the base:
-- **Single screen by design**: its README says two-screen games are "shown stacked … on the single display". Under
-  `run-port` that's both LCDs on the top panel, the route A result. It's a separate SDL frontend (`source/portmaster/`
-  of a fork) plus a LÖVE game selector; the repo has **only a prebuilt binary**, no source, built off PolluxPT's
-  unlicensed port.
-- Its launcher hard-codes PortMaster folders and `GAMEDIR=/$directory/ports/yokoi`; it would need checking against
-  BananaOS's `/data/roms/ports`, and its selector downloads PortMaster's LÖVE runtime.
-- It ships a **ready-made ROM pack** (`yokoi_pack_portmaster.ykp.7z.*`, ~40 MB): Nintendo's ROMs and artwork.
-  Not used here; the pack is made from the user's own MAME files, as planned.
-Upstream's own Linux frontend already does two windows, so there's nothing to take from it.
-
 ## Open questions
 
-- Does SDL2's KMSDRM drive two windows, one on each panel, smoothly (way 1)? Otherwise way 2.
-- Do the volume keys work while Yokoi runs, and does quitting give the panels back to the menu cleanly?
-- Touch: does it land on the bottom panel's window in way 1 (SDL's KMSDRM evdev touch has no window per panel)?
+- Does Yokoi's Linux frontend open one window per display, or one window over both? The answer decides how much of
+  step 4 is needed.
+- How does it find its ROM pack and keep saves? It should fit the card's layout (`/data`).
+- Does its audio work with BananaOS's ALSA setup and volume keys?
