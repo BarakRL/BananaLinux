@@ -75,11 +75,16 @@ RetroArch's standard `gw_libretro.info`, but nothing found shows `gw`-specific t
 
 The user supplies them. Nothing of the games goes into BananaOS or a PR. Yokoi's `CONVERT_ROM` scripts (target
 `rgds`: `convert_original.py --target rgds`, `convert_3ds.py --target rgds`) turn **MAME** data, tested with MAME
-0.282, into `yokoi_pack_rgds.ykp`. The inputs:
-- the game's MAME ROM zip;
-- its MAME artwork zip, in `rom/artwork/`;
-- a screenshot of the console artwork, taken in MAME itself (F12 while the game shows its artwork; MAME doesn't
-  ship these).
+0.282, into `yokoi_pack_rgds.ykp`. The inputs, all inside `CONVERT_ROM/` and named after the MAME set
+(`gnw_dkong2` for Donkey Kong II):
+- the MAME ROM **zip** in `rom/roms/` (`gnw_dkong2.zip`);
+- the MAME artwork **zip** in `rom/artwork/` (`gnw_dkong2.zip`);
+- a screenshot of the console artwork in `rom/console/` (`gnw_dkong2.png`), taken in MAME itself (F12 while the game
+  shows its artwork; MAME doesn't ship these).
+
+The converter runs on a PC (Python plus `requirements.txt`, and Inkscape for the SVG screens; tex3ds is only for
+3DS). It could run in the container too, with Inkscape added to `Dockerfile.banana` on the host. Only the `.ykp`
+goes on the handheld.
 
 **`.mgw` files don't work with Yokoi.** They're the libretro `gw` core's format (MADrigal's simulators). That core
 would be the other route: a RetroArch core added to BananaOS, with both screens stacked on one panel unless that's
