@@ -1,6 +1,7 @@
 # Game & Watch on both panels: plan
 
-Status: idea, not started. Written 2026-10-31. Three routes; the first experiment decides between them.
+Status: superseded 2026-11-01 by `game-and-watch-mame.md` (MAME, for a non-technical user's setup). Kept as the
+record of the alternatives. Written 2026-10-31.
 
 ## Why
 
