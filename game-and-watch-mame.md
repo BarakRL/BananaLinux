@@ -1,6 +1,6 @@
 # Game & Watch through MAME, on both panels: plan
 
-Status: stage 1 done, stage 3 (integration) under way on `feature/game-and-watch`. Stage 1 started 2026-11-01. MVP built the same day (MAME master `ab8a0bb6`, SOURCES=hh_sm510.cpp:
+Status (2026-11-06): stage 3 (integration) done on `feature/game-and-watch`; waiting for the user's check of `-8`, then the PR. Stage 1 started 2026-11-01. MVP built the same day (MAME master `ab8a0bb6`, SOURCES=hh_sm510.cpp:
 176 drivers, 41 MB stripped; local patches for no fontconfig and for quitting on SDL_QUIT, `-DUSE_OZONE` for bgfx's
 EGL without X11); card bundle in `tmp/gnw-test/card/`. **Stage 1: go** (see "Stage 1 results"). Replaces the route choice in `game-and-watch.md`, which stays as
 the record of the alternatives.
@@ -123,51 +123,54 @@ rendering, or fall back to Yokoi with a user-supplied `.ykp`.
 
 Not needed: the packs' own views and MAME's own layouts, placed by the rules above (dropped 2026-11-01).
 
-### 3. Integration (branch `feature/game-and-watch`, from main `12474fb`)
+### 3. Integration (branch `feature/game-and-watch`, rebased on main 0.5.2.2 `803e61c`, 2026-11-02)
 
-Done 2026-11-01, not yet built as an image:
+Done and checked on the RG DS Plus (test packages up to `-8`):
 - `buildroot/package/mame-gnw`: MAME's 0.289 release (`mame0289`), `SOURCES=hh_sm510.cpp`, installed as
   `/usr/bin/mame-gnw`; at most 6 compilers (at 16 a 32 GB machine ran out of memory). Patches in
   `buildroot/patches/mame-gnw`: 0001 no fontconfig, 0002 SDL_QUIT quits and SIGUSR1 opens the menu, 0003
-  `BANANA_SVG_MAXW`, 0004 draw13 (GPU cropping, `BANANA_TARGET_HEIGHT`, SIGUSR2 swaps the panels).
+  `BANANA_SVG_MAXW`, 0004 draw13 (GPU cropping, `BANANA_TARGET_HEIGHT`, SIGUSR2 swaps the panels), 0005 no warning
+  screens ("requires external artwork", "ROM needs redump": to the log only), 0006–0008 MAME's menu for the device
+  (short, on the top panel, 16 lines a panel in Pixelify Sans).
 - `gw-hotkeys` (in the package): reads the pad; F + Start quits (SIGTERM, then SIGKILL after 5 s), F tapped on its own
   opens MAME's menu (SIGUSR1, a 100 ms Tab press: shorter, the UI missed it), L2 swaps the panels (SIGUSR2).
 - `run-gw`: the rules above; `menu_pause 1` in MAME's ui.ini (the game paused in the menu). Card: ROM zips in
-  `roms/gameandwatch`, artwork zips as downloaded in `roms/gameandwatch/artwork` (`flat = yes`); MAME's settings in
-  `/data/mame-gnw`, high scores `saves/gameandwatch`, states `states/gameandwatch`, log `banana/logs/mame-gnw`.
+  `roms/gameandwatch`, artwork zips as downloaded in `roms/gameandwatch/artwork` (`flat = yes`), main or second card
+  (the artwork folder is the one beside the ROM); MAME's settings in `/data/mame-gnw`, high scores
+  `saves/gameandwatch`, states `states/gameandwatch`, log `banana/logs/mame-gnw`.
 - `[gameandwatch]` in systems.conf (`perf = performance`); pad mapping `/usr/share/banana/mame-gnw/banana.cfg`.
 - A Game & Watch icon (Multi Screen, open, DK II's colours) in `ui/assets/overrides` (icons/ and systems.cfg).
 - The menu's views: "Unit Only" fits the two panels well; "Unit and Backdrop" is a 4:3 frame (small in the tall
   window, by design of the packs). Default stays "Background".
-
-- Names and covers (`gw-meta`, 2026-11-01): see "Menu names and art" below; at menu start (banana-ui-session) and
-  after each game, in the background, waiting while a game plays; ~7 s a cover. Checked on the device: four games.
-- Both cards: the artwork folder is the one beside the ROM (`<roms>/gameandwatch/artwork`, main or second card).
-
-- MAME's menu, made for the device (patches 0005–0008, 2026-11-02): no warning screens; a short menu (Video Options,
-  Machine Configuration, DIP Switches, Input Settings, Audio Mixer, Close Menu, Quit); on the top panel in
-  two-screen games too; 16 lines a panel in the Pixel theme's Pixelify Sans (SDL_ttf kept without fontconfig: the
-  built-in bitmap font scaled up was soft, and MAME's whole-step scaling sized it differently per game type).
+- Names and covers (`gw-meta`): names, year and maker from MAME's `-listxml` (the driver's SYST lines) into
+  `gamelist.xml`; covers drawn by MAME from the artwork's "Unit Only" view after 1 s of the game (`-seconds_to_run 1`;
+  1 s and 3 s gave byte-identical covers) into `media/box`, one game at a time, waiting while a game plays. ~5 s and
+  110–210 MB a cover (MAME 76 MB, the rest the artwork's full-size PNGs). Three at a time froze the 1 GB Plus with a
+  game running (2026-11-02): kept sequential.
+- When it runs: systems.conf's generic `changed = <command>` (no Game & Watch code in the menu): at the menu's start,
+  and when the system's folder or a folder in it changes on either card, once the copying is quiet (the menu's
+  RomWatch, home screen only). The second card's arrival (`/run/banana/sd2`) counts as a change. A lock with an
+  "again" flag: a start while one runs makes it loop once more.
+- Covers: `covers = own` in systems.conf: the sync doesn't download the home server's covers for it (RomM's scraped
+  box art was poor: the user, 2026-11-02); `covers =` in the card's `banana/systems.conf` brings them back.
 - RomM: g-and-w → gameandwatch, each artwork zip with its game, checked by size (RomM's hashes of the files in a
-  folder entry aren't the files'); test packages built from `tmp/all-prs-gw` (tmp/all-prs + this branch).
+  folder entry aren't the files').
+- Files: Game & Watch's folder guessed from a server's `gw`, `gnw`, `game and watch` or `game & watch` folder
+  (`sysfolders.cpp`'s alias table, 2026-11-06).
+- Docs: `docs/EMULATORS.md` (Game & Watch section), the card's README.txt, README.md's systems list.
 
 To do:
-- The `-3` test package (MAME rebuilt with 0005–0008), then remove the card's temporary test override
-  (`banana/systems.conf`, `/data/gwtest`).
-- Hide MAME's "requires external artwork" warning when there's no artwork zip.
+- The user to check `-8` on 0.5.2.2 with the MAME zips back (covers drawn, a deleted cover back after a reboot, no
+  RomM covers); then the PR to JorreFog/BananaLinux (no attribution line). No issue first (the user's call,
+  2026-11-01).
 - Maybe: remember the view picked in the menu, and the panel swap, per game.
-- Menu names and art (decided 2026-11-01): names, year and maker from MAME's own `-listxml` ("Game & Watch: Donkey
-  Kong II", 1983, Nintendo), covers rendered by MAME from the user's pack (`-video none -seconds_to_run 3 -snapview
-  "Unit Only"`: ~10 s a game on the Plus; the bare LCD without a pack), written as gamelist.xml and media/box by the
-  scraper run. Other sources considered:
-  - ScreenScraper: has a Game & Watch system and knows MAME short names, so it should cover all 51. BananaOS
-    already stores a ScreenScraper account (`banana/accounts.conf`) but its scraper isn't written yet ("not
-    available yet"); it needs API developer credentials for BananaOS (maintainer's call).
-  - The unit photo in the user's own artwork zip (`JR-55.png`…), scaled into `roms/gw/media/box/<rom>.jpg`:
-    all 51, offline, no download.
-  - The current scraper (libretro-thumbnails "Handheld Electronic Game"): only 16 of the 51, and only through the
-    name table.
-- No issue first (the user's call, 2026-11-01).
+- Not done, by choice: new covers shown without a menu restart (the menu keeps textures by path; a cover redrawn
+  under the same name shows the old one until restart: the user, 2026-11-02, "no need").
+- Known: RomM matched `gnw_mario` to the wrong game (Mario The Juggler): the user's to fix in RomM.
+
+Sources for covers considered and rejected (2026-11-01/02): ScreenScraper (needs developer credentials BananaOS
+doesn't have), libretro-thumbnails "Handheld Electronic Game" (16 of 51, photos of the units: "pointless"), RomM's own
+(poor), the unit photo in the artwork zip (kept as an idea; MAME's drawing chosen).
 
 ## Open questions
 
